@@ -65,11 +65,11 @@ def search_symbol(query):
 
 def calc_score(metrics, ratios):
     try:
-        pe     = ratios.get("priceEarningsRatio", 30)
-        roe    = ratios.get("returnOnEquity", 0.1) * 100
+        pe     = ratios.get("priceToEarningsRatio", 30)
+        roe    = ratios.get("returnOnEquityRatio", 0.1) * 100
         margin = ratios.get("netProfitMargin", 0.1) * 100
         cr     = ratios.get("currentRatio", 1.5)
-        de     = ratios.get("debtEquityRatio", 1)
+        de     = ratios.get("debtToEquityRatio", 1)
 
         growth        = min(100, max(0, 50 + metrics.get("revenueGrowth", 0) * 200))
         profitability = min(100, max(0, margin * 2 + roe * 0.4))
@@ -190,13 +190,13 @@ with tab1:
     c1.metric("Revenue",      f"${income[0].get('revenue',0)/1e9:.1f}B" if income else "—")
     c2.metric("Net Income",   f"${income[0].get('netIncome',0)/1e9:.1f}B" if income else "—")
     c3.metric("Gross Margin", f"{ratios.get('grossProfitMargin',0)*100:.1f}%")
-    c4.metric("ROE",          f"{ratios.get('returnOnEquity',0)*100:.1f}%")
+    c4.metric("ROE",          f"{ratios.get('returnOnEquityRatio',0)*100:.1f}%")
 
     c1,c2,c3,c4 = st.columns(4)
-    c1.metric("P/E Ratio",     f"{ratios.get('priceEarningsRatio',0):.1f}x")
-    c2.metric("EV/EBITDA",     f"{metrics.get('evToEbitda',0):.1f}x")
+    c1.metric("P/E Ratio",     f"{ratios.get('priceToEarningsRatio',0):.1f}x")
+    c2.metric("EV/EBITDA",     f"{metrics.get('enterpriseValueMultiple',0):.1f}x")
     c3.metric("Current Ratio", f"{ratios.get('currentRatio',0):.2f}x")
-    c4.metric("Debt/Equity",   f"{ratios.get('debtEquityRatio',0):.2f}x")
+    c4.metric("Debt/Equity",   f"{ratios.get('debtToEquityRatio',0):.2f}x")
 
     st.markdown("---")
     if income:
@@ -267,10 +267,10 @@ with tab2:
 with tab3:
     st.markdown("### Valuation Multiples")
     c1,c2,c3,c4 = st.columns(4)
-    c1.metric("P/E",       f"{ratios.get('priceEarningsRatio',0):.1f}x")
+    c1.metric("P/E",       f"{ratios.get('priceToEarningsRatio',0):.1f}x")
     c2.metric("P/B",       f"{ratios.get('priceToBookRatio',0):.1f}x")
-    c3.metric("EV/EBITDA", f"{metrics.get('evToEbitda',0):.1f}x")
-    c4.metric("EV/Sales",  f"{metrics.get('evToSales',0):.1f}x")
+    c3.metric("EV/EBITDA", f"{metrics.get('enterpriseValueMultiple',0):.1f}x")
+    c4.metric("EV/Sales",  f"{metrics.get('priceToSalesRatio',0):.1f}x")
 
     st.markdown("---")
     st.markdown("### DCF Fair Value Estimate")
@@ -309,10 +309,10 @@ with tab4:
                 "Symbol":      s,
                 "Price":       f"${p.get('price',0):,.2f}",
                 "Mkt Cap":     f"${p.get('mktCap',0)/1e9:.1f}B",
-                "P/E":         f"{r.get('priceEarningsRatio',0):.1f}x",
+                "P/E":         f"{r.get('priceToEarningsRatio',0):.1f}x",
                 "Net Margin":  f"{r.get('netProfitMargin',0)*100:.1f}%",
-                "ROE":         f"{r.get('returnOnEquity',0)*100:.1f}%",
-                "Debt/Equity": f"{r.get('debtEquityRatio',0):.2f}x",
+                "ROE":         f"{r.get('returnOnEquityRatio',0)*100:.1f}%",
+                "Debt/Equity": f"{r.get('debtToEquityRatio',0):.2f}x",
             })
     if peer_rows:
         st.dataframe(pd.DataFrame(peer_rows), use_container_width=True, hide_index=True)
@@ -327,7 +327,7 @@ with tab4:
                 "Symbol":       s,
                 "Gross Margin": r.get("grossProfitMargin",0)*100,
                 "Net Margin":   r.get("netProfitMargin",0)*100,
-                "ROE":          r.get("returnOnEquity",0)*100,
+                "ROE":          r.get("returnOnEquityRatio",0)*100,
             })
     if margin_rows:
         df_m = pd.DataFrame(margin_rows)
@@ -341,7 +341,7 @@ with tab4:
 with tab5:
     st.markdown("### Risk Analysis")
     flags = []
-    de  = ratios.get("debtEquityRatio", 0)
+    de  = ratios.get("debtToEquityRatio", 0)
     cr  = ratios.get("currentRatio", 1)
     npm = ratios.get("netProfitMargin", 0.1) * 100
     fcf = cashflow[0].get("freeCashFlow", 1) if cashflow else 1
@@ -424,11 +424,11 @@ with tab7:
         Price: ${profile.get('price')}
         Market Cap: ${profile.get('mktCap',0)/1e9:.1f}B
         Sector: {profile.get('sector')}
-        P/E: {ratios.get('priceEarningsRatio',0):.1f}x
-        EV/EBITDA: {metrics.get('evToEbitda',0):.1f}x
+        P/E: {ratios.get('priceToEarningsRatio',0):.1f}x
+        EV/EBITDA: {metrics.get('enterpriseValueMultiple',0):.1f}x
         Net Margin: {ratios.get('netProfitMargin',0)*100:.1f}%
-        ROE: {ratios.get('returnOnEquity',0)*100:.1f}%
-        Debt/Equity: {ratios.get('debtEquityRatio',0):.2f}x
+        ROE: {ratios.get('returnOnEquityRatio',0)*100:.1f}%
+        Debt/Equity: {ratios.get('debtToEquityRatio',0):.2f}x
         Current Ratio: {ratios.get('currentRatio',0):.2f}x
         Apex Score: {score['total']}/100 ({rating})
         """
