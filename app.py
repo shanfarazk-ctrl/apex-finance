@@ -32,6 +32,11 @@ def get_profile(symbol):
     data = fmp("profile", {"symbol": symbol})
     return data[0] if data else {}
 
+@st.cache_data(ttl=300)
+def get_quote(symbol):
+    data = fmp("quote", {"symbol": symbol})
+    return data[0] if data else {}
+
 @st.cache_data(ttl=3600)
 def get_income(symbol, period="annual"):
     return fmp("income-statement", {"symbol": symbol, "period": period, "limit": 5})
@@ -139,11 +144,17 @@ if not FMP_KEY:
 
 with st.spinner(f"Loading {symbol}..."):
     profile  = get_profile(symbol)
+    quote    = get_quote(symbol)
     income   = get_income(symbol, period)
     balance  = get_balance(symbol)
     cashflow = get_cashflow(symbol)
     metrics  = get_metrics(symbol)
     ratios   = get_ratios(symbol)
+
+    if quote:
+        profile["mktCap"]            = quote.get("marketCap", profile.get("mktCap", 0))
+        profile["price"]             = quote.get("price", profile.get("price", 0))
+        profile["changesPercentage"] = quote.get("changesPercentage", 0)
 
 if not profile:
     st.error(f"Could not load data for {symbol}. Check the ticker.")
@@ -160,7 +171,8 @@ with col1:
     color  = "🟢" if change >= 0 else "🔴"
     st.markdown(f"### ${price:,.2f}  {color} {change:+.2f}%  ·  {profile.get('exchangeShortName','')}")
 with col2:
-    st.metric("Market Cap", f"${profile.get('mktCap',0)/1e9:.1f}B")
+    mktcap = profile.get("mktCap", 0)
+    st.metric("Market Cap", f"${mktcap/1e9:.1f}B" if mktcap else "—")
     st.metric("Sector", profile.get("sector","—"))
 with col3:
     st.markdown(f"### {emoji} {rating}")
@@ -288,6 +300,10 @@ with tab4:
         r = get_ratios(s)
         m = get_metrics(s)
         p = get_profile(s)
+        q = get_quote(s)
+        if q:
+            p["mktCap"] = q.get("marketCap", p.get("mktCap", 0))
+            p["price"]  = q.get("price", p.get("price", 0))
         if r and p:
             peer_rows.append({
                 "Symbol":      s,
@@ -330,10 +346,10 @@ with tab5:
     npm = ratios.get("netProfitMargin", 0.1) * 100
     fcf = cashflow[0].get("freeCashFlow", 1) if cashflow else 1
 
-    if de > 2:  flags.append(("🔴 High Leverage",          f"Debt/Equity: {de:.2f}x"))
-    if cr < 1:  flags.append(("🔴 Low Liquidity",          f"Current Ratio: {cr:.2f}x"))
-    if npm < 5: flags.append(("🟡 Thin Margins",           f"Net Margin: {npm:.1f}%"))
-    if fcf < 0: flags.append(("🔴 Negative Free Cash Flow",f"FCF: ${fcf/1e9:.2f}B"))
+    if de > 2:  flags.append(("🔴 High Leverage",           f"Debt/Equity: {de:.2f}x"))
+    if cr < 1:  flags.append(("🔴 Low Liquidity",           f"Current Ratio: {cr:.2f}x"))
+    if npm < 5: flags.append(("🟡 Thin Margins",            f"Net Margin: {npm:.1f}%"))
+    if fcf < 0: flags.append(("🔴 Negative Free Cash Flow", f"FCF: ${fcf/1e9:.2f}B"))
 
     risk_score = max(0, 100 - len(flags) * 20)
     r_label    = "Low Risk" if risk_score >= 70 else "Moderate Risk" if risk_score >= 40 else "High Risk"
