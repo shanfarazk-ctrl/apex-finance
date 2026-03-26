@@ -190,11 +190,11 @@ with tab1:
     c1.metric("Revenue",      f"${income[0].get('revenue',0)/1e9:.1f}B" if income else "—")
     c2.metric("Net Income",   f"${income[0].get('netIncome',0)/1e9:.1f}B" if income else "—")
     c3.metric("Gross Margin", f"{ratios.get('grossProfitMargin',0)*100:.1f}%")
-    c4.metric("ROE",          f"{ratios.get('returnOnEquityRatio',0)*100:.1f}%")
+    c4.metric("ROE",          f"{ratios.get('netIncomePerShare',0)/ratios.get('bookValuePerShare',1)*100:.1f}%")
 
     c1,c2,c3,c4 = st.columns(4)
     c1.metric("P/E Ratio",     f"{ratios.get('priceToEarningsRatio',0):.1f}x")
-    c2.metric("EV/EBITDA",     f"{metrics.get('enterpriseValueMultiple',0):.1f}x")
+    c2.metric("EV/EBITDA",     f"{ratios.get('enterpriseValueMultiple',0):.1f}x")
     c3.metric("Current Ratio", f"{ratios.get('currentRatio',0):.2f}x")
     c4.metric("Debt/Equity",   f"{ratios.get('debtToEquityRatio',0):.2f}x")
 
@@ -269,7 +269,7 @@ with tab3:
     c1,c2,c3,c4 = st.columns(4)
     c1.metric("P/E",       f"{ratios.get('priceToEarningsRatio',0):.1f}x")
     c2.metric("P/B",       f"{ratios.get('priceToBookRatio',0):.1f}x")
-    c3.metric("EV/EBITDA", f"{metrics.get('enterpriseValueMultiple',0):.1f}x")
+    c3.metric("EV/EBITDA", f"{ratios.get('enterpriseValueMultiple',0):.1f}x")
     c4.metric("EV/Sales",  f"{metrics.get('priceToSalesRatio',0):.1f}x")
 
     st.markdown("---")
@@ -311,7 +311,7 @@ with tab4:
                 "Mkt Cap":     f"${p.get('mktCap',0)/1e9:.1f}B",
                 "P/E":         f"{r.get('priceToEarningsRatio',0):.1f}x",
                 "Net Margin":  f"{r.get('netProfitMargin',0)*100:.1f}%",
-                "ROE":         f"{r.get('returnOnEquityRatio',0)*100:.1f}%",
+                "ROE":         f"{r.get('netIncomePerShare',0)/r.get('bookValuePerShare',1)*100:.1f}%",
                 "Debt/Equity": f"{r.get('debtToEquityRatio',0):.2f}x",
             })
     if peer_rows:
@@ -327,7 +327,7 @@ with tab4:
                 "Symbol":       s,
                 "Gross Margin": r.get("grossProfitMargin",0)*100,
                 "Net Margin":   r.get("netProfitMargin",0)*100,
-                "ROE":          r.get("returnOnEquityRatio",0)*100,
+                "ROE":          r.get("netIncomePerShare",0)/r.get("bookValuePerShare",1)*100,
             })
     if margin_rows:
         df_m = pd.DataFrame(margin_rows)
@@ -427,7 +427,7 @@ with tab7:
         P/E: {ratios.get('priceToEarningsRatio',0):.1f}x
         EV/EBITDA: {metrics.get('enterpriseValueMultiple',0):.1f}x
         Net Margin: {ratios.get('netProfitMargin',0)*100:.1f}%
-        ROE: {ratios.get('returnOnEquityRatio',0)*100:.1f}%
+        ROE: {ratios.get('netIncomePerShare',0)/ratios.get('bookValuePerShare',1)*100:.1f}%
         Debt/Equity: {ratios.get('debtToEquityRatio',0):.2f}x
         Current Ratio: {ratios.get('currentRatio',0):.2f}x
         Apex Score: {score['total']}/100 ({rating})
