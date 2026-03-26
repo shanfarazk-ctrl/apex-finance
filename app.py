@@ -61,7 +61,7 @@ def get_ratios(symbol):
 
 @st.cache_data(ttl=300)
 def search_symbol(query):
-    return fmp("search", {"query": query, "limit": 8})
+    return fmp("search-symbol", {"query": query, "limit": 8})
 
 def calc_score(metrics, ratios):
     try:
